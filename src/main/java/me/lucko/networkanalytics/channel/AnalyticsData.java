@@ -23,42 +23,25 @@
  *  SOFTWARE.
  */
 
-package me.lucko.networkanalytics.model;
+package me.lucko.networkanalytics.channel;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
+
+import java.util.List;
 
 @Getter
+@ToString
 @AllArgsConstructor
-public class StatsHolder {
+public class AnalyticsData {
 
-    private long numWithPtGreaterThan1h;
-    private long numWithPtGreaterThan6h;
-    private long numWithConnGreaterThan50;
+    private String serverId;
+    private long timeSent;
+    private List<OnlinePlayerRecord> players;
 
-    private long numWithLastLoginMoreThan1moAgo;
-    private long numWithLastLoginMoreThan1wAgo;
-    private long numWithConnLessThan10;
-    private long numWithPtLessThan30m;
+    public AnalyticsData() {
 
-    private int averageTimePlayed;
-    private int averageTimesConnected;
-
-
-    private long uniqueJoins;
-    private long totalTimePlayed;
-    private long totalConnections;
-
-    private long uniqueJoinsMonth;
-    private long newPlayersMonth;
-    private long returningPlayersMonth;
-
-    private long uniqueJoinsWeek;
-    private long newPlayersWeek;
-    private long returningPlayersWeek;
-
-    private long uniqueJoinsToday;
-    private long newPlayersToday;
-    private long returningPlayersToday;
+    }
 
 }

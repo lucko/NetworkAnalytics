@@ -28,7 +28,6 @@ package me.lucko.networkanalytics;
 import lombok.Getter;
 
 import me.lucko.helper.Commands;
-import me.lucko.helper.Events;
 import me.lucko.helper.Scheduler;
 import me.lucko.helper.messaging.Channel;
 import me.lucko.helper.messaging.ChannelAgent;
@@ -36,20 +35,15 @@ import me.lucko.helper.messaging.InstanceData;
 import me.lucko.helper.metadata.Metadata;
 import me.lucko.helper.plugin.ExtendedJavaPlugin;
 import me.lucko.helper.plugin.ap.Plugin;
-import me.lucko.helper.plugin.ap.PluginDependency;
 import me.lucko.helper.redis.HelperRedis;
 import me.lucko.helper.sql.HelperDataSource;
 import me.lucko.helper.utils.Players;
-import me.lucko.networkanalytics.handler.DataManager;
-import me.lucko.networkanalytics.model.AnalyticsData;
-import me.lucko.networkanalytics.model.OnlinePlayerRecord;
+import me.lucko.networkanalytics.channel.AnalyticsData;
+import me.lucko.networkanalytics.channel.OnlinePlayerRecord;
+import me.lucko.networkanalytics.data.DataManager;
+import me.lucko.networkanalytics.handler.AnalyticsCommand;
+import me.lucko.networkanalytics.handler.AnalyticsListener;
 
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-
-import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.ProtocolVersion;
 
 import java.util.ArrayList;
@@ -58,14 +52,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
-@Plugin(name = "NetworkAnalytics", depends = {
-        @PluginDependency("helper"),
-        @PluginDependency("helper-sql"),
-        @PluginDependency("helper-redis"),
-        @PluginDependency("ProtocolSupport")
-})
+import javax.annotation.Nonnull;
+
+@Plugin(
+        name = "NetworkAnalytics",
+        hardDepends = {
+                "helper",
+                "helper-sql",
+                "helper-redis",
+                "ProtocolSupport"
+        }
+)
 public class AnalyticsPlugin extends ExtendedJavaPlugin implements NetworkAnalytics {
 
     private InstanceData instanceData;
@@ -80,16 +78,19 @@ public class AnalyticsPlugin extends ExtendedJavaPlugin implements NetworkAnalyt
 
     @Override
     public void enable() {
-        instanceData = getService(InstanceData.class);
 
+        // get instance data
+        instanceData = getService(InstanceData.class);
         if (instanceData == null) {
             String name = loadConfig("config.yml").getString("server-id", "null");
             instanceData = new InstanceData() {
+                @Nonnull
                 @Override
                 public String getId() {
                     return name;
                 }
 
+                @Nonnull
                 @Override
                 public Set<String> getGroups() {
                     return Collections.emptySet();
@@ -97,40 +98,14 @@ public class AnalyticsPlugin extends ExtendedJavaPlugin implements NetworkAnalyt
             };
         }
 
+        // get sql source
         HelperDataSource sql = getService(HelperDataSource.class);
+
+        // init data manager
         dataManager = new DataManager(this, sql);
         dataManager.init();
 
-        Events.subscribe(PlayerLoginEvent.class, EventPriority.MONITOR)
-                .filter(e -> e.getResult() == PlayerLoginEvent.Result.ALLOWED)
-                .handler(e -> {
-                    dataManager.logPlayer(e.getPlayer().getUniqueId(), e.getPlayer().getName());
-                    Metadata.provideForPlayer(e.getPlayer()).put(NetworkAnalytics.CONNECTION_TIME_SECONDS, (System.currentTimeMillis() / 1000L));
-                })
-                .bindWith(this);
-
-        Events.subscribe(PlayerJoinEvent.class, EventPriority.MONITOR)
-                .handler(e -> {
-                    ProtocolVersion protocolVersion = ProtocolSupportAPI.getProtocolVersion(e.getPlayer());
-                    if (protocolVersion != null) {
-                        Metadata.provideForPlayer(e.getPlayer()).put(NetworkAnalytics.PROTOCOL_VERSION, protocolVersion);
-                    }
-                })
-                .bindWith(this);
-
-        Events.subscribe(PlayerQuitEvent.class)
-                .handler(e -> {
-                    Long loginTime = Metadata.provideForPlayer(e.getPlayer()).getOrNull(NetworkAnalytics.CONNECTION_TIME_SECONDS);
-                    long now = System.currentTimeMillis() / 1000L;
-                    if (loginTime != null) {
-                        long diff = now - loginTime;
-                        int mins = (int) TimeUnit.SECONDS.toMinutes(diff);
-                        if (mins > 0) {
-                            dataManager.incrementPlayerMinutesPlayed(e.getPlayer().getUniqueId(), mins);
-                        }
-                    }
-                })
-                .bindWith(this);
+        bindComposite(new AnalyticsListener(this));
 
         // get messaging channels
         HelperRedis redis = getService(HelperRedis.class);
@@ -149,7 +124,7 @@ public class AnalyticsPlugin extends ExtendedJavaPlugin implements NetworkAnalyt
 
         // cleanup old analytics data
         Scheduler.runTaskRepeatingAsync(() -> {
-            long expiry = (System.currentTimeMillis() / 1000L) - 6;
+            long expiry = (System.currentTimeMillis() / 1000L) - 20;
             analyticsDataMap.values().removeIf(data -> data.getTimeSent() < expiry);
         }, 35L, 40L);
 
@@ -189,15 +164,15 @@ public class AnalyticsPlugin extends ExtendedJavaPlugin implements NetworkAnalyt
     private AnalyticsData formData() {
         String serverId = instanceData.getId();
         long time = System.currentTimeMillis() / 1000L;
-        List<OnlinePlayerRecord> records = new ArrayList<>();
 
+        List<OnlinePlayerRecord> records = new ArrayList<>();
         Players.forEach(p -> {
             ProtocolVersion version = Metadata.provideForPlayer(p).getOrNull(NetworkAnalytics.PROTOCOL_VERSION);
-            if (version == null) {
-                records.add(new OnlinePlayerRecord(p.getUniqueId(), p.getName(), ""));
-            } else {
-                records.add(new OnlinePlayerRecord(p.getUniqueId(), p.getName(), version));
+            String locale = p.getLocale();
+            if (locale == null || locale.equals("null")) {
+                locale = "undisclosed";
             }
+            records.add(new OnlinePlayerRecord(p.getUniqueId(), p.getName(), version, locale.toLowerCase()));
         });
 
         return new AnalyticsData(serverId, time, records);

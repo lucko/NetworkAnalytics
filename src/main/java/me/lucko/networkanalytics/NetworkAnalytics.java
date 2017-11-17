@@ -26,8 +26,8 @@
 package me.lucko.networkanalytics;
 
 import me.lucko.helper.metadata.MetadataKey;
-import me.lucko.networkanalytics.handler.DataManager;
-import me.lucko.networkanalytics.model.AnalyticsData;
+import me.lucko.networkanalytics.channel.AnalyticsData;
+import me.lucko.networkanalytics.data.DataManager;
 
 import protocolsupport.api.ProtocolVersion;
 

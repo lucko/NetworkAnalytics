@@ -23,29 +23,51 @@
  *  SOFTWARE.
  */
 
-package me.lucko.networkanalytics.model;
+package me.lucko.networkanalytics.channel;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import protocolsupport.api.ProtocolVersion;
+
+import java.util.Optional;
 import java.util.UUID;
 
-@Getter
-@EqualsAndHashCode(of = "uuid")
 @ToString
-@AllArgsConstructor
-public class PlayerRecord {
+public class OnlinePlayerRecord {
 
-    private final UUID uuid;
-    private final String username;
+    @Getter
+    private UUID uuid;
+    @Getter
+    private String username;
+    private String version;
+    private String locale;
 
-    private final long firstLogin;
-    private final long lastLogin;
-    private final String lastSeen;
+    public OnlinePlayerRecord(UUID uuid, String username, ProtocolVersion version, String locale) {
+        this.uuid = uuid;
+        this.username = username;
+        this.version = version == null ? null : version.name();
+        this.locale = locale;
+    }
 
-    private final int timesConnected;
-    private final int minutesPlayed;
+    public OnlinePlayerRecord() {
+
+    }
+
+    public Optional<ProtocolVersion> getVersion() {
+        if (this.version == null || this.version.isEmpty()) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(ProtocolVersion.valueOf(this.version));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<String> getLocale() {
+        return Optional.ofNullable(locale);
+    }
 
 }

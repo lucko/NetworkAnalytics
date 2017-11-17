@@ -23,15 +23,13 @@
  *  SOFTWARE.
  */
 
-package me.lucko.networkanalytics.handler;
+package me.lucko.networkanalytics.data;
 
 import lombok.RequiredArgsConstructor;
 
 import me.lucko.helper.Scheduler;
 import me.lucko.helper.sql.HelperDataSource;
 import me.lucko.networkanalytics.AnalyticsPlugin;
-import me.lucko.networkanalytics.model.PlayerRecord;
-import me.lucko.networkanalytics.model.StatsHolder;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

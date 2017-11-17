@@ -23,28 +23,42 @@
  *  SOFTWARE.
  */
 
-package me.lucko.networkanalytics.model;
+package me.lucko.networkanalytics.data;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.List;
-
 @Getter
 @AllArgsConstructor
-public class AnalyticsData implements Comparable<AnalyticsData> {
+public class StatsHolder {
 
-    private String serverId;
-    private long timeSent;
-    private List<OnlinePlayerRecord> players;
+    private long numWithPtGreaterThan1h;
+    private long numWithPtGreaterThan6h;
+    private long numWithConnGreaterThan50;
 
-    public AnalyticsData() {
+    private long numWithLastLoginMoreThan1moAgo;
+    private long numWithLastLoginMoreThan1wAgo;
+    private long numWithConnLessThan10;
+    private long numWithPtLessThan30m;
 
-    }
+    private int averageTimePlayed;
+    private int averageTimesConnected;
 
-    @Override
-    public int compareTo(AnalyticsData o) {
-        return serverId.compareTo(o.getServerId());
-    }
+
+    private long uniqueJoins;
+    private long totalTimePlayed;
+    private long totalConnections;
+
+    private long uniqueJoinsMonth;
+    private long newPlayersMonth;
+    private long returningPlayersMonth;
+
+    private long uniqueJoinsWeek;
+    private long newPlayersWeek;
+    private long returningPlayersWeek;
+
+    private long uniqueJoinsToday;
+    private long newPlayersToday;
+    private long returningPlayersToday;
 
 }
