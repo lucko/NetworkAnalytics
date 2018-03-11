@@ -29,8 +29,8 @@ import lombok.RequiredArgsConstructor;
 
 import com.google.common.collect.Maps;
 
-import me.lucko.helper.Scheduler;
-import me.lucko.helper.utils.Color;
+import me.lucko.helper.Schedulers;
+import me.lucko.helper.text.Text;
 import me.lucko.helper.utils.TimeUtil;
 import me.lucko.networkanalytics.AnalyticsPlugin;
 import me.lucko.networkanalytics.channel.AnalyticsData;
@@ -63,15 +63,15 @@ public class AnalyticsCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("networkanalytics.view")) {
-            sender.sendMessage(Color.colorize("&3[ANALYTICS] &fYou do not have permission to use this command."));
+            sender.sendMessage(Text.colorize("&3[ANALYTICS] &fYou do not have permission to use this command."));
             return true;
         }
 
-        sender.sendMessage(Color.colorize("&3[ANALYTICS] &fRetrieving monitoring data..."));
+        sender.sendMessage(Text.colorize("&3[ANALYTICS] &fRetrieving monitoring data..."));
 
         plugin.getDataManager().getStats().thenAcceptAsync(statsHolder -> {
             if (!statsHolder.isPresent()) {
-                sender.sendMessage(Color.colorize("&3[ANALYTICS] &fUnable to retrieve monitoring data."));
+                sender.sendMessage(Text.colorize("&3[ANALYTICS] &fUnable to retrieve monitoring data."));
                 return;
             }
 
@@ -172,10 +172,10 @@ public class AnalyticsCommand implements CommandExecutor {
             m.add(" ");
 
             for (String str : m) {
-                sender.sendMessage(Color.colorize(str));
+                sender.sendMessage(Text.colorize(str));
             }
 
-        }, Scheduler.async());
+        }, Schedulers.async());
         return true;
     }
 

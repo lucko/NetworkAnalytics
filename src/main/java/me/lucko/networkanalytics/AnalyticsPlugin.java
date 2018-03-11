@@ -28,7 +28,7 @@ package me.lucko.networkanalytics;
 import lombok.Getter;
 
 import me.lucko.helper.Commands;
-import me.lucko.helper.Scheduler;
+import me.lucko.helper.Schedulers;
 import me.lucko.helper.messaging.Channel;
 import me.lucko.helper.messaging.ChannelAgent;
 import me.lucko.helper.messaging.InstanceData;
@@ -105,14 +105,14 @@ public class AnalyticsPlugin extends ExtendedJavaPlugin implements NetworkAnalyt
         dataManager = new DataManager(this, sql);
         dataManager.init();
 
-        bindComposite(new AnalyticsListener(this));
+        bindModule(new AnalyticsListener(this));
 
         // get messaging channels
         HelperRedis redis = getService(HelperRedis.class);
         analyticsChannel = redis.getChannel("na-data", AnalyticsData.class);
 
         // send monitoring data periodically
-        Scheduler.runTaskRepeatingSync(() -> {
+        Schedulers.sync().runRepeating(() -> {
             AnalyticsData data = formData();
             analyticsChannel.sendMessage(data);
         }, 70L, 90L).bindWith(this);
@@ -123,7 +123,7 @@ public class AnalyticsPlugin extends ExtendedJavaPlugin implements NetworkAnalyt
         analyticsChannelAgent.addListener((agent, message) -> analyticsDataMap.put(message.getServerId(), message));
 
         // cleanup old analytics data
-        Scheduler.runTaskRepeatingAsync(() -> {
+        Schedulers.async().runRepeating(() -> {
             long expiry = (System.currentTimeMillis() / 1000L) - 20;
             analyticsDataMap.values().removeIf(data -> data.getTimeSent() < expiry);
         }, 35L, 40L);
@@ -135,7 +135,7 @@ public class AnalyticsPlugin extends ExtendedJavaPlugin implements NetworkAnalyt
                 .assertUsage("<player>")
                 .handler(c -> {
                     String player = c.rawArg(0);
-                    Scheduler.runAsync(() -> {
+                    Schedulers.async().run(() -> {
                         OnlinePlayerRecord record = null;
 
                         search:
@@ -156,7 +156,7 @@ public class AnalyticsPlugin extends ExtendedJavaPlugin implements NetworkAnalyt
                         Players.msg(c.sender(), "&3[ANALYTICS] &fPlayer &b" + record.getUsername() + " &fis playing on version &b" + getProtocolName(record.getVersion().orElse(null)) + "&f.");
                     });
                 })
-                .register(this, "playerversion");
+                .register("playerversion");
 
         provideService(NetworkAnalytics.class, this);
     }

@@ -27,7 +27,7 @@ package me.lucko.networkanalytics.data;
 
 import lombok.RequiredArgsConstructor;
 
-import me.lucko.helper.Scheduler;
+import me.lucko.helper.Schedulers;
 import me.lucko.helper.sql.HelperDataSource;
 import me.lucko.networkanalytics.AnalyticsPlugin;
 
@@ -86,7 +86,7 @@ public class DataManager {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        }, Scheduler.async());
+        }, Schedulers.async());
     }
 
     public CompletableFuture<Boolean> incrementPlayerMinutesPlayed(UUID uuid, int minutes) {
@@ -102,7 +102,7 @@ public class DataManager {
                 e.printStackTrace();
             }
             return false;
-        }, Scheduler.async());
+        }, Schedulers.async());
     }
 
     public CompletableFuture<Optional<String>> getUsername(UUID uuid) {
@@ -121,7 +121,7 @@ public class DataManager {
                 e.printStackTrace();
             }
             return Optional.empty();
-        }, Scheduler.async());
+        }, Schedulers.async());
     }
 
     public CompletableFuture<Optional<UUID>> getUuid(String username) {
@@ -140,7 +140,7 @@ public class DataManager {
                 e.printStackTrace();
             }
             return Optional.empty();
-        }, Scheduler.async());
+        }, Schedulers.async());
     }
 
     public CompletableFuture<Optional<PlayerRecord>> getPlayerData(UUID uuid) {
@@ -166,7 +166,7 @@ public class DataManager {
                 e.printStackTrace();
             }
             return Optional.empty();
-        }, Scheduler.async());
+        }, Schedulers.async());
     }
 
     public CompletableFuture<Optional<StatsHolder>> getStats() {
@@ -222,7 +222,7 @@ public class DataManager {
             }
 
             return Optional.empty();
-        }, Scheduler.async());
+        }, Schedulers.async());
     }
 
     private static long getLong(Connection c, String query) throws Exception {

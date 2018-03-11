@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 import me.lucko.helper.Events;
 import me.lucko.helper.metadata.Metadata;
 import me.lucko.helper.terminable.TerminableConsumer;
-import me.lucko.helper.terminable.composite.CompositeTerminable;
+import me.lucko.helper.terminable.module.TerminableModule;
 import me.lucko.networkanalytics.AnalyticsPlugin;
 import me.lucko.networkanalytics.NetworkAnalytics;
 
@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 
 @RequiredArgsConstructor
-public class AnalyticsListener implements CompositeTerminable {
+public class AnalyticsListener implements TerminableModule {
     private final AnalyticsPlugin plugin;
 
     @Override
